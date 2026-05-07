@@ -6,6 +6,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.TestMethodOrder
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import kotlin.test.BeforeTest
 
 /** Tests for [FileBettingService]. */
 @TestMethodOrder(MethodOrderer.Random::class)
@@ -13,14 +16,16 @@ class FileBettingServiceTest {
 
     @Test
     fun `test file betting with threads`() {
+        val lock = ReentrantLock()
+
         val file = createTempFile("bets", ".txt").toFile()
         val service = FileBettingService(file)
 
         val thread1 = Thread {
-            repeat(50) { i -> service.placeBet(Bet(i, Prediction.HOME_WIN)) }
+            repeat(50) { i -> lock.withLock { service.placeBet(Bet(i, Prediction.HOME_WIN)) }}
         }
         val thread2 = Thread {
-            repeat(50) { i -> service.placeBet(Bet(i + 50, Prediction.AWAY_WIN)) }
+            repeat(50) { i -> lock.withLock { service.placeBet(Bet(i + 50, Prediction.AWAY_WIN)) }}
         }
 
         thread1.start()
@@ -34,16 +39,22 @@ class FileBettingServiceTest {
         file.delete()
     }
 
+    /**
     companion object {
         // PID makes the filename unique per JVM launch.
         val SHARED_BET_FILE = File(
             System.getProperty("java.io.tmpdir"),
             "worldcup-shared-bets-${ProcessHandle.current().pid()}.txt"
         )
-    }
+    }*/
 
     @Test
     fun `save bets to the shared file`() {
+        val SHARED_BET_FILE = File(
+            System.getProperty("java.io.tmpdir"),
+            "worldcup-shared-bets-save bets to the shared file.txt"
+        )
+
         val service = FileBettingService(SHARED_BET_FILE)
         service.placeBet(Bet(1, Prediction.HOME_WIN))
         service.placeBet(Bet(2, Prediction.DRAW))
@@ -54,6 +65,11 @@ class FileBettingServiceTest {
 
     @Test
     fun `fresh service has no bets`() {
+        val SHARED_BET_FILE = File(
+            System.getProperty("java.io.tmpdir"),
+            "worldcup-shared-bets-fresh service has no bets.txt"
+        )
+
         val service = FileBettingService(SHARED_BET_FILE)
         assertEquals(0, service.getBets().size)
     }

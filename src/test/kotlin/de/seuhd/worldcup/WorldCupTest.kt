@@ -2,6 +2,7 @@ package de.seuhd.worldcup
 
 import org.junit.jupiter.api.Timeout
 import java.util.concurrent.TimeUnit
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -134,11 +135,13 @@ class WorldCupTest {
             match(1, "AAA", "BBB", 2, 0),
             match(2, "BBB", "CCC", 1, 1)
         )
+
         val result = BettingService.evaluate(matches)
 
         assertEquals(0, result.evaluated)
         assertEquals(0, result.correct)
     }
+
 
     @Test
     fun `standings are stable when multiple teams tie on all criteria`() {
@@ -168,7 +171,7 @@ class WorldCupTest {
     }
 
     @Test
-    @Timeout(value = 300, unit = TimeUnit.MILLISECONDS)
+    @Timeout(value = 3000, unit = TimeUnit.MILLISECONDS)
     fun `load json from network`(){
         val jsonNetwork = JsonLoader.loadJsonFromNetwork()
         val jsonLocal = JsonLoader.loadJson()
