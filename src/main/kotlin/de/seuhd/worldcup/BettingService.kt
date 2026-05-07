@@ -45,7 +45,7 @@ data class BettingResult(
  */
 object BettingService {
 
-    private val bets = mutableMapOf<Int, Bet>()
+    internal val bets = mutableMapOf<Int, Bet>()
     private var cachedResult: BettingResult? = null
 
     /** Store a new bet, replacing any existing bet for the same match. */
@@ -80,14 +80,26 @@ object BettingService {
      *   - 0 points if the predicted outcome is wrong or the match has not been played.
      */
     fun evaluateBonus(matches: List<Match>): Int {
-        TODO("Implement bonus point evaluation")
+        var bonusPoints = 0
+        for (match in matches) {
+            val bet = bets[match.matchId] ?: continue
+            when {
+                bet.predictedHomeScore == match.homeScore && bet.predictedAwayScore == match.awayScore -> bonusPoints += 3
+                bet.prediction == Prediction.outcomeOf(match.homeScore ?: continue, match.awayScore ?: continue) -> bonusPoints += 1
+                else -> bonusPoints += 0
+            }
+        }
+
+        return bonusPoints
     }
 
     /**
      * Remove the bet for [matchId]. Does nothing if no bet exists for that match.
      */
     fun removeBet(matchId: Int) {
-        TODO("Implement removing a single bet by matchId")
+        if (bets.contains(matchId)){
+            bets.remove(matchId)
+        }
     }
 
     /**
@@ -95,11 +107,16 @@ object BettingService {
      * exists; throws [IllegalArgumentException] if no bet is found for that match.
      */
     fun changeBet(bet: Bet) {
-        TODO("Implement changing an existing bet")
+        if (!bets.containsKey(bet.matchId)){
+            throw IllegalArgumentException("Bet with id ${bet.matchId} doesn't exist")
+        }else {
+            bets[bet.matchId] = bet
+        }
     }
 
     /** Drop all stored bets. */
     fun clear() {
         bets.clear()
+        cachedResult = null
     }
 }

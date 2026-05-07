@@ -1,6 +1,10 @@
 package de.seuhd.worldcup
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Serializer
 import java.io.File
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * File-backed bet store. Each bet is persisted as one `matchId,predictionCode`
@@ -8,6 +12,7 @@ import java.io.File
  * line.
  */
 class FileBettingService(private val file: File) {
+
 
     fun placeBet(bet: Bet) {
         val bets = readBets()
